@@ -1,5 +1,6 @@
 import streamlit as st
 from openai import OpenAI
+import os
 from github_integration import get_repo_files
 
 # 🔑 API Key
