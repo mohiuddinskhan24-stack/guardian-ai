@@ -3,7 +3,7 @@ from openai import OpenAI
 from github_integration import get_repo_files
 
 # 🔑 API Key
-client = OpenAI(api_key=""YOUR_API_KEY"")
+client = OpenAI(api_key="YOUR_API_KEY")
 
 # 🎨 Page config
 st.set_page_config(page_title="AI Security Scanner", page_icon="🔐")
