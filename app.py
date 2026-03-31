@@ -3,22 +3,15 @@ import os
 from openai import OpenAI
 from github_integration import get_repo_files
 
-# 🔐 API key
+# 🔐 Load API key
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# 🎨 Page Config
-st.set_page_config(
-    page_title="AI Security Scanner",
-    page_icon="🔐",
-    layout="centered"
-)
+# 🎨 Page setup
+st.set_page_config(page_title="AI Security Scanner", page_icon="🔐")
 
-# 🌈 Custom Styling
+# 🌈 Styling
 st.markdown("""
 <style>
-.main {
-    background-color: #0e1117;
-}
 h1 {
     text-align: center;
     color: #00ADB5;
@@ -30,9 +23,6 @@ h1 {
     height: 3em;
     width: 100%;
 }
-.stTextInput>div>div>input {
-    border-radius: 10px;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -40,36 +30,41 @@ h1 {
 def analyze_code(code):
     try:
         prompt = f"""
-Analyze this code for:
-- SQL Injection
-- Insecure API usage
+Analyze this code for security vulnerabilities including:
 
-Give:
-1. Vulnerability
-2. Explanation
-3. Fix
+- SQL Injection
+- Cross-Site Scripting (XSS)
+- Command Injection
+- Insecure API usage
+- Hardcoded credentials
+- Broken authentication
+- Security misconfiguration
+
+Give output in this format:
+
+🔴 Vulnerability:
+🟡 Explanation:
+🟢 Fix:
+⚠️ Severity:
+
+If no vulnerability found, say: "No major vulnerability detected"
 
 Code:
 {code}
 """
+
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}]
         )
+
         return response.choices[0].message.content
 
     except Exception:
-        return(
-            "🔴 Vulnerability: SQL Injection\n"
-            "🟡 Explanation: Unsafe user input in query\n"
-            "🟢 Fix: Use parameterized queries\n"
-            "⚠️ Severity: High"
-        )
-
+        return "⚠️ Error analyzing code (API limit or issue)"
 
 # 🖥️ UI
 st.title("🔐 AI Security Vulnerability Scanner")
-
 st.markdown("### 🚀 Scan GitHub repositories for security issues")
 
 repo_name = st.text_input("🔗 Enter GitHub Repo (username/repo):")
@@ -80,13 +75,24 @@ if st.button("🔍 Scan Repository"):
             try:
                 files = get_repo_files(repo_name)
 
-                for name, code in files[:2]:
-                    st.markdown(f"### 📄 {name}")
+                found = False
 
+                # 🔥 Scan only code files
+                for name, code in files[:10]:
+
+                    if not name.endswith((".py", ".js", ".java", ".cpp", ".html")):
+                        continue
+
+                    found = True
+
+                    st.markdown(f"### 📄 {name}")
                     result = analyze_code(code)
 
                     st.success("✅ Scan Complete")
                     st.code(result, language="markdown")
+
+                if not found:
+                    st.warning("⚠️ No code files found to scan")
 
             except Exception as e:
                 st.error("❌ Error: Check repo name or GitHub token")
